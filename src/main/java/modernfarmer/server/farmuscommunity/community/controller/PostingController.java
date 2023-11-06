@@ -3,12 +3,9 @@ package modernfarmer.server.farmuscommunity.community.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import modernfarmer.server.farmuscommunity.community.dto.request.WritePostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
-import modernfarmer.server.farmuscommunity.community.entity.BaseEntity;
 import modernfarmer.server.farmuscommunity.community.service.PostingService;
 import modernfarmer.server.farmuscommunity.community.util.JwtTokenProvider;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,7 +22,7 @@ public class PostingController {
     private final JwtTokenProvider jwtTokenProvider;
     private  final PostingService postingService;
 
-    @PostMapping
+    @PostMapping("/write")
     public BaseResponseDto writePosting(HttpServletRequest request, @RequestParam("file") List<MultipartFile> multipartFiles,
                                         @RequestParam("title") String title,
                                         @RequestParam("contents") String contents,

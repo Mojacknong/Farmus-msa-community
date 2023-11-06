@@ -3,7 +3,6 @@ package modernfarmer.server.farmuscommunity.community.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import modernfarmer.server.farmuscommunity.community.dto.request.WritePostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
 import modernfarmer.server.farmuscommunity.community.entity.*;
 import modernfarmer.server.farmuscommunity.community.repository.PostingImageRepository;
@@ -29,7 +28,6 @@ public class PostingService {
     private final PostingRepository postingRepository;
     private  final PostingImageRepository postingImageRepository;
     private final TagRepository tagRepository;
-
     private final PostingTagRepository postingTagRepository;
 
     public BaseResponseDto writePosting(Long userId, List<MultipartFile> multipartFiles,
