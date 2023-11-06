@@ -1,6 +1,8 @@
 package modernfarmer.server.farmuscommunity.community.service;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
@@ -9,6 +11,7 @@ import modernfarmer.server.farmuscommunity.community.repository.PostingImageRepo
 import modernfarmer.server.farmuscommunity.community.repository.PostingRepository;
 import modernfarmer.server.farmuscommunity.community.repository.PostingTagRepository;
 import modernfarmer.server.farmuscommunity.community.repository.TagRepository;
+import modernfarmer.server.farmuscommunity.global.config.mail.MailSenderRunner;
 import modernfarmer.server.farmuscommunity.global.config.s3.S3Uploader;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ public class PostingService {
     private  final PostingImageRepository postingImageRepository;
     private final TagRepository tagRepository;
     private final PostingTagRepository postingTagRepository;
+    private final MailSenderRunner mailSenderRunner;
 
     public BaseResponseDto writePosting(Long userId, List<MultipartFile> multipartFiles,
                                         String title,
@@ -75,4 +79,17 @@ public class PostingService {
     }
 
 
+    public BaseResponseDto reportPosting(String reason) throws Exception {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(reason);
+        String reasons = jsonNode.get("reason").asText();
+
+        mailSenderRunner.sendEmail("신고 메일입니다.", reasons +"이유로 신고가 왔습니다.");
+
+
+
+        return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
+
+    }
 }

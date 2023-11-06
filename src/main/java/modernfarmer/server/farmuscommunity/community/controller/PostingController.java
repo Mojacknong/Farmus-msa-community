@@ -37,4 +37,15 @@ public class PostingController {
 
         return baseResponseDto;
     }
+
+    @PostMapping("/report")
+    public BaseResponseDto reportPosting(@RequestBody String reason) throws Exception {
+
+        BaseResponseDto baseResponseDto = postingService.reportPosting(reason);
+
+        return baseResponseDto;
+    }
+
+
+
 }
