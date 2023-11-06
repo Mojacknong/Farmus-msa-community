@@ -6,8 +6,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Getter;
-import modernfarmer.server.farmususer.global.exception.fail.ErrorMessage;
-import modernfarmer.server.farmususer.global.exception.success.SuccessMessage;
+import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
+import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
+import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 
 
 @Getter
@@ -36,4 +37,6 @@ public class BaseResponseDto<T> {
                 .message(errorMessage.getMessage())
                 .build();
     }
+
+
 }

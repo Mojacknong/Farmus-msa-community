@@ -10,7 +10,7 @@ import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDt
 import modernfarmer.server.farmuscommunity.community.entity.Comment;
 import modernfarmer.server.farmuscommunity.community.entity.Posting;
 import modernfarmer.server.farmuscommunity.community.repository.*;
-import modernfarmer.server.farmususer.global.exception.success.SuccessMessage;
+import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

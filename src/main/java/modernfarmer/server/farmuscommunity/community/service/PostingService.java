@@ -10,7 +10,7 @@ import modernfarmer.server.farmuscommunity.community.repository.PostingRepositor
 import modernfarmer.server.farmuscommunity.community.repository.PostingTagRepository;
 import modernfarmer.server.farmuscommunity.community.repository.TagRepository;
 import modernfarmer.server.farmuscommunity.global.config.s3.S3Uploader;
-import modernfarmer.server.farmususer.global.exception.success.SuccessMessage;
+import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +34,6 @@ public class PostingService {
                                         String title,
                                         String contents,
                                         List<String> tags
-
     ) throws IOException {
 
         Posting posting = Posting
@@ -69,16 +68,10 @@ public class PostingService {
                     .posting(posting)
                     .imageUrl(url)
                     .build();
-
             postingImageRepository.save(postingImage);
         }
 
-
-
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
-
-
-
     }
 
 
