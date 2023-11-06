@@ -1,15 +1,16 @@
 package modernfarmer.server.farmuscommunity.community.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Getter
-@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "posting")
-public class Posting {
+public class Posting extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "posting_id", nullable = false)
@@ -23,5 +24,6 @@ public class Posting {
 
     @Column(name = "contents", length = 501)
     private String contents;
+
 
 }
