@@ -9,7 +9,8 @@ import static org.springframework.http.HttpStatus.*;
 public enum ErrorMessage {
 
     INTERVAL_SERVER_ERROR(1001,  "요청을 처리하는 과정에서 서버가 예상하지 못한 오류가 발생하였습니다."),
-    REFRESH_NOTIFICATION_ERROR(4017,  "Refresh Token 인증 오류");
+    REFRESH_NOTIFICATION_ERROR(4017,  "Refresh Token 인증 오류"),
+    OBJECT_URL_INSERT_ERROR (2023,"객체 URL을 처리하는 과정에서 오류가 났습니다.");
 
 
 

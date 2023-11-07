@@ -1,21 +1,21 @@
 package modernfarmer.server.farmuscommunity.community.service;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
 import modernfarmer.server.farmuscommunity.community.dto.response.ReportTagResponse;
 import modernfarmer.server.farmuscommunity.community.entity.*;
 import modernfarmer.server.farmuscommunity.community.repository.*;
 import modernfarmer.server.farmuscommunity.global.config.mail.MailSenderRunner;
 import modernfarmer.server.farmuscommunity.global.config.s3.S3Uploader;
+import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -24,20 +24,23 @@ import java.util.List;
 @Transactional
 @Service
 public class PostingService {
-    private final ReportTagRepository reportTagRepository;
 
+
+    private final ReportTagRepository reportTagRepository;
     private final S3Uploader s3Uploader;
     private final PostingRepository postingRepository;
-    private  final PostingImageRepository postingImageRepository;
+    private final PostingImageRepository postingImageRepository;
     private final TagRepository tagRepository;
     private final PostingTagRepository postingTagRepository;
+    private final PostingReportRepository postingReportRepository;
     private final MailSenderRunner mailSenderRunner;
 
-    public BaseResponseDto writePosting(Long userId, List<MultipartFile> multipartFiles,
+
+    public BaseResponseDto writePosting(Long userId,
+                                        List<MultipartFile> multipartFiles,
                                         String title,
                                         String contents,
-                                        List<String> tags
-    ) throws IOException {
+                                        List<String> tags) {
 
         Posting posting = Posting
                 .builder()
@@ -48,59 +51,124 @@ public class PostingService {
 
         postingRepository.save(posting);
 
-        for(int i = 0; i < tags.size(); i++){
+        boolean ojectUrlResult = objectImageUrl(posting,tags, multipartFiles);
 
-            Tag tag = tagRepository.findTagByAndTagName(tags.get(i));
 
-            log.info(String.valueOf(tag.getTagName()));
 
-            PostingTag postingTag = PostingTag
-                    .builder()
-                    .tag(tag)
-                    .posting(posting)
-                    .build();
+        if(!ojectUrlResult){
 
-            postingTagRepository.save(postingTag);
+            return BaseResponseDto.of(ErrorMessage.OBJECT_URL_INSERT_ERROR);
 
         }
-        List<String> imageUrls = s3Uploader.uploadFiles(multipartFiles, "postingImages");
 
-        for(String url : imageUrls){
-            PostingImage postingImage = PostingImage
-                    .builder()
-                    .posting(posting)
-                    .imageUrl(url)
-                    .build();
-            postingImageRepository.save(postingImage);
-        }
 
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
 
 
-    public BaseResponseDto reportPosting(String reason) throws Exception {
+    public BaseResponseDto updatePosting(
+            Long userId,
+            List<String> removeFiles,
+            List<MultipartFile> updateFiles,
+            String title,
+            String contents,
+            Long postingId,
+            List<String> tags) {
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(reason);
-        String reasons = jsonNode.get("reason").asText();
+        Posting posting = Posting
+                .builder()
+                .id(postingId)
+                .title(title)
+                .contents(contents)
+                .userId(userId)
+                .build();
 
-        mailSenderRunner.sendEmail("신고 메일입니다.", reasons +"이유로 신고가 왔습니다.");
+        postingRepository.updatePosting(userId, title, contents, postingId);
+
+        for(String image : removeFiles){
+            postingImageRepository.deleteImage(image, posting);
+            log.info(image);
+        }
+
+
+
+        boolean ojectUrlResult = objectImageUrl(posting,tags, updateFiles);
+
+        if(!ojectUrlResult){
+
+            return BaseResponseDto.of(ErrorMessage.OBJECT_URL_INSERT_ERROR);
+
+        }
 
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
 
     }
 
+    public BaseResponseDto reportPosting(Long userId, ReportPostingRequest reportPostingRequest) throws Exception {
+
+
+        // 아이디로 이름 조회
+        String reportTagName = reportTagRepository.getReportTagName(reportPostingRequest.getReportTagId());
+
+        // 테이블 데이터 넣기
+        Posting posting = Posting.builder().id(reportPostingRequest.getPostingId()).build();
+        ReportTag reportTag = ReportTag.builder().id(reportPostingRequest.getReportTagId()).build();
+
+        PostingReport postingReport = PostingReport
+                .builder()
+                .posting(posting)
+                .reportTag(reportTag)
+                .userId(userId)
+                .build();
+
+        postingReportRepository.save(postingReport);
+
+        // 메일 보내기
+        mailSenderRunner.sendEmail("신고 메일입니다. ", reportTagName +" 이유로 신고가 왔습니다.");
+
+        // 완료
+        return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
+
+    }
 
     public BaseResponseDto getReportTag(){
 
         List<ReportTag> reportTag = reportTagRepository.findAllBy();
 
-        log.info(String.valueOf(reportTag));
-
         return BaseResponseDto.of(SuccessMessage.SUCCESS, ReportTagResponse.of(reportTag));
 
     }
 
+    private boolean objectImageUrl(Posting posting, List<String> tags, List<MultipartFile> multipartFiles ){
 
+        try{
+            for(int i = 0; i < tags.size(); i++){
+
+                Tag tag = tagRepository.findTagByAndTagName(tags.get(i));
+
+                PostingTag postingTag = PostingTag
+                        .builder()
+                        .tag(tag)
+                        .posting(posting)
+                        .build();
+
+                postingTagRepository.save(postingTag);
+
+            }
+            List<String> imageUrls = s3Uploader.uploadFiles(multipartFiles, "postingImages");
+
+            for(String url : imageUrls){
+                PostingImage postingImage = PostingImage
+                        .builder()
+                        .posting(posting)
+                        .imageUrl(url)
+                        .build();
+                postingImageRepository.save(postingImage);
+            }
+        }catch ( IOException e){
+            return false;
+        }
+        return true;
+    }
 
 }

@@ -1,14 +1,16 @@
 package modernfarmer.server.farmuscommunity.community.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
-@Setter
+@Builder
 @Entity
 @Table(name = "report_tag")
 public class ReportTag extends BaseEntity{

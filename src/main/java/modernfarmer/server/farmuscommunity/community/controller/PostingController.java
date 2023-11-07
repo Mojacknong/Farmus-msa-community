@@ -3,11 +3,13 @@ package modernfarmer.server.farmuscommunity.community.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
 import modernfarmer.server.farmuscommunity.community.entity.ReportTag;
 import modernfarmer.server.farmuscommunity.community.repository.ReportTagRepository;
 import modernfarmer.server.farmuscommunity.community.service.PostingService;
 import modernfarmer.server.farmuscommunity.community.util.JwtTokenProvider;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,21 +41,32 @@ public class PostingController {
     }
 
     @PostMapping("/report")
-    public BaseResponseDto reportPosting(@RequestBody String reason) throws Exception {
+    public BaseResponseDto reportPosting(HttpServletRequest request, @Validated @RequestBody ReportPostingRequest reportPostingRequest) throws Exception {
 
+        String userId = jwtTokenProvider.getUserId(request);
 
-
-        return postingService.reportPosting(reason);
+        return postingService.reportPosting(Long.valueOf(userId), reportPostingRequest);
     }
+
+    @PatchMapping("/report-update")
+    public BaseResponseDto updatePosting(HttpServletRequest request,
+                                         @RequestParam("removeFile") List<String> removeFiles,
+                                         @RequestParam("updateFile") List<MultipartFile> updateFiles,
+                                         @RequestParam("title") String title,
+                                         @RequestParam("contents") String contents,
+                                         @RequestParam("postingId") Long postingId,
+                                         @RequestParam("tags") List<String> tags) {
+
+        String userId = jwtTokenProvider.getUserId(request);
+
+        return postingService.updatePosting(Long.valueOf(userId), removeFiles, updateFiles, title, contents, postingId, tags);
+    }
+
 
     @GetMapping("/report-tag")
     public BaseResponseDto getReportTag() {
 
-
-
         return postingService.getReportTag();
     }
-
-
 
 }
