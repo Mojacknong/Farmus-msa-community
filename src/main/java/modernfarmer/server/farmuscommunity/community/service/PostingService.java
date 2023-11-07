@@ -6,11 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
+import modernfarmer.server.farmuscommunity.community.dto.response.ReportTagResponse;
 import modernfarmer.server.farmuscommunity.community.entity.*;
-import modernfarmer.server.farmuscommunity.community.repository.PostingImageRepository;
-import modernfarmer.server.farmuscommunity.community.repository.PostingRepository;
-import modernfarmer.server.farmuscommunity.community.repository.PostingTagRepository;
-import modernfarmer.server.farmuscommunity.community.repository.TagRepository;
+import modernfarmer.server.farmuscommunity.community.repository.*;
 import modernfarmer.server.farmuscommunity.global.config.mail.MailSenderRunner;
 import modernfarmer.server.farmuscommunity.global.config.s3.S3Uploader;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
@@ -26,6 +24,7 @@ import java.util.List;
 @Transactional
 @Service
 public class PostingService {
+    private final ReportTagRepository reportTagRepository;
 
     private final S3Uploader s3Uploader;
     private final PostingRepository postingRepository;
@@ -87,9 +86,21 @@ public class PostingService {
 
         mailSenderRunner.sendEmail("신고 메일입니다.", reasons +"이유로 신고가 왔습니다.");
 
-
-
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
 
     }
+
+
+    public BaseResponseDto getReportTag(){
+
+        List<ReportTag> reportTag = reportTagRepository.findAllBy();
+
+        log.info(String.valueOf(reportTag));
+
+        return BaseResponseDto.of(SuccessMessage.SUCCESS, ReportTagResponse.of(reportTag));
+
+    }
+
+
+
 }

@@ -4,6 +4,8 @@ package modernfarmer.server.farmuscommunity.community.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
+import modernfarmer.server.farmuscommunity.community.entity.ReportTag;
+import modernfarmer.server.farmuscommunity.community.repository.ReportTagRepository;
 import modernfarmer.server.farmuscommunity.community.service.PostingService;
 import modernfarmer.server.farmuscommunity.community.util.JwtTokenProvider;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,7 @@ public class PostingController {
 
     private final JwtTokenProvider jwtTokenProvider;
     private  final PostingService postingService;
+    private final ReportTagRepository reportTagRepository;
 
     @PostMapping("/write")
     public BaseResponseDto writePosting(HttpServletRequest request, @RequestParam("file") List<MultipartFile> multipartFiles,
@@ -32,18 +35,23 @@ public class PostingController {
 
         String userId = jwtTokenProvider.getUserId(request);
 
-
-        BaseResponseDto baseResponseDto = postingService.writePosting(Long.valueOf(userId), multipartFiles, title, contents, tags);
-
-        return baseResponseDto;
+        return postingService.writePosting(Long.valueOf(userId), multipartFiles, title, contents, tags);
     }
 
     @PostMapping("/report")
     public BaseResponseDto reportPosting(@RequestBody String reason) throws Exception {
 
-        BaseResponseDto baseResponseDto = postingService.reportPosting(reason);
 
-        return baseResponseDto;
+
+        return postingService.reportPosting(reason);
+    }
+
+    @GetMapping("/report-tag")
+    public BaseResponseDto getReportTag() {
+
+
+
+        return postingService.getReportTag();
     }
 
 

@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
-import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
+
 
 
 @Getter
