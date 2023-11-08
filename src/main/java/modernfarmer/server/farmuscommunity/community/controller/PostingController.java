@@ -48,10 +48,10 @@ public class PostingController {
         return postingService.reportPosting(Long.valueOf(userId), reportPostingRequest);
     }
 
-    @PatchMapping("/report-update")
+    @PatchMapping("/write-update")
     public BaseResponseDto updatePosting(HttpServletRequest request,
                                          @RequestParam("removeFile") List<String> removeFiles,
-                                         @RequestParam("updateFile") List<MultipartFile> updateFiles,
+                                         @RequestParam(value = "updateFile", required = false) List<MultipartFile> updateFiles,
                                          @RequestParam("title") String title,
                                          @RequestParam("contents") String contents,
                                          @RequestParam("postingId") Long postingId,

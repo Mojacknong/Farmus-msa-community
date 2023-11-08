@@ -42,6 +42,8 @@ public class PostingService {
                                         String contents,
                                         List<String> tags) {
 
+        boolean ojectUrlResult = true;
+
         Posting posting = Posting
                 .builder()
                 .title(title)
@@ -51,16 +53,19 @@ public class PostingService {
 
         postingRepository.save(posting);
 
-        boolean ojectUrlResult = objectImageUrl(posting,tags, multipartFiles);
+        tagUpdate(posting, tags);
 
+        if(!multipartFiles.get(0).isEmpty()){
 
+            ojectUrlResult = objectImageUrl(posting, multipartFiles);
+
+        }
 
         if(!ojectUrlResult){
 
             return BaseResponseDto.of(ErrorMessage.OBJECT_URL_INSERT_ERROR);
 
         }
-
 
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
@@ -74,6 +79,8 @@ public class PostingService {
             String contents,
             Long postingId,
             List<String> tags) {
+
+        boolean ojectUrlResult = true;
 
         Posting posting = Posting
                 .builder()
@@ -90,10 +97,14 @@ public class PostingService {
             log.info(image);
         }
 
-
         postingTagRepository.deleteTag(posting);
 
-        boolean ojectUrlResult = objectImageUrl(posting,tags, updateFiles);
+        tagUpdate(posting, tags);
+
+        if(!updateFiles.get(0).isEmpty()){
+
+            ojectUrlResult = objectImageUrl(posting, updateFiles);
+        }
 
         if(!ojectUrlResult){
 
@@ -140,22 +151,26 @@ public class PostingService {
 
     }
 
-    private boolean objectImageUrl(Posting posting, List<String> tags, List<MultipartFile> multipartFiles ){
+    private void tagUpdate(Posting posting, List<String> tags){
+
+        for(int i = 0; i < tags.size(); i++){
+
+            Tag tag = tagRepository.findTagByAndTagName(tags.get(i));
+
+            PostingTag postingTag = PostingTag
+                    .builder()
+                    .tag(tag)
+                    .posting(posting)
+                    .build();
+
+            postingTagRepository.save(postingTag);
+        }
+    }
+
+    private boolean objectImageUrl(Posting posting,List<MultipartFile> multipartFiles ){
 
         try{
-            for(int i = 0; i < tags.size(); i++){
 
-                Tag tag = tagRepository.findTagByAndTagName(tags.get(i));
-
-                PostingTag postingTag = PostingTag
-                        .builder()
-                        .tag(tag)
-                        .posting(posting)
-                        .build();
-
-                postingTagRepository.save(postingTag);
-
-            }
             List<String> imageUrls = s3Uploader.uploadFiles(multipartFiles, "postingImages");
 
             for(String url : imageUrls){
