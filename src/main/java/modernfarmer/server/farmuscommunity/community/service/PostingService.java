@@ -91,6 +91,7 @@ public class PostingService {
         }
 
 
+        postingTagRepository.deleteTag(posting);
 
         boolean ojectUrlResult = objectImageUrl(posting,tags, updateFiles);
 
