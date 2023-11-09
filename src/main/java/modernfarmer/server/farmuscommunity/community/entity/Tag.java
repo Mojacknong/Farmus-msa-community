@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -17,5 +19,8 @@ public class Tag extends BaseEntity{
 
     @Column(name = "tag_name", nullable = false, length = 10)
     private String tagName;
+
+    @OneToMany(mappedBy = "tag")
+    private Set<PostingTag> postingTags = new LinkedHashSet<>();
 
 }

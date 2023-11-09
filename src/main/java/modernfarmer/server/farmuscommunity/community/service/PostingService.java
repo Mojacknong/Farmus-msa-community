@@ -6,17 +6,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
+import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingDTO;
+
+import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingResponseDto;
 import modernfarmer.server.farmuscommunity.community.entity.*;
 import modernfarmer.server.farmuscommunity.community.repository.*;
 import modernfarmer.server.farmuscommunity.global.config.mail.MailSenderRunner;
 import modernfarmer.server.farmuscommunity.global.config.s3.S3Uploader;
 import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
+import modernfarmer.server.farmuscommunity.user.UserServiceFeignClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -26,6 +34,7 @@ public class PostingService {
 
 
 
+    private final UserServiceFeignClient userServiceFeignClient;
     private final S3Uploader s3Uploader;
     private final PostingRepository postingRepository;
     private final PostingImageRepository postingImageRepository;
@@ -143,23 +152,60 @@ public class PostingService {
 
     public BaseResponseDto getWholePosting(){
 
-        // 게시글 id, 제목, 내용, 업로드 시간,이미지 배열, 유저 id 게시글에 달린 댓글 개수 가져오기 함수(시간 순서로)
+        List<Posting> list = postingRepository.allPostingSelect();
 
-        // 유저 id , 기반으로 유저 닉네임, 프로필 사진 url 가져오기 함수(페인)
-
-
-
-        // 시간 형식 업데이트 로직
+        modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.allUser();
+        Map<String, Object> userDataMap = (Map<String, Object>) userData.getData();
+        List<Map<String, Object>> allUserDtoList = (List<Map<String, Object>>) userDataMap.get("allUserDtoList");
 
 
+        Map<Integer, Map<String, Object>> userDtoMap = new HashMap<>();
+        for (Map<String, Object> userDto : allUserDtoList) {
+            Integer userId = (Integer) userDto.get("id");
+            userDtoMap.put(userId, userDto);
+        }
 
+        List<WholePostingDTO> wholePostingList = list.stream()
+                .map(posting -> {
+                    List<String> imageUrls = posting.getPostingImages().stream()
+                            .map(PostingImage::getImageUrl)
+                            .collect(Collectors.toList());
 
+                    List<String> tagNames = posting.getPostingTags().stream()
+                            .map(postingTag -> postingTag.getTag().getTagName())
+                            .collect(Collectors.toList());
 
-    return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
+                    // 시간 형식 업데이트 로직
+                    String formattedDate = formatCreatedAt(posting.getCreatedAt());
+
+                    Integer userId = Math.toIntExact(posting.getUserId());
+                    Map<String, Object> userDto = userDtoMap.get(userId);
+
+                    WholePostingDTO.WholePostingDTOBuilder builder = WholePostingDTO.builder()
+                            .userId(userId)
+                            .title(posting.getTitle())
+                            .contents(posting.getContents())
+                            .postingId(posting.getId())
+                            .created_at(formattedDate)
+                            .postingImage(imageUrls)
+                            .tagName(tagNames)
+                            .commentCount(posting.getComments().size());
+
+                    if (userDto != null) {
+                        builder.nickName((String) userDto.get("nickName"))
+                                .imageUrl((String) userDto.get("imageUrl"));
+                    }
+
+                    return builder.build();
+                })
+                .collect(Collectors.toList());
+
+    return BaseResponseDto.of(SuccessMessage.SUCCESS, WholePostingResponseDto.of(wholePostingList));
 
 }
 
     private void tagUpdate(Posting posting, List<String> tags){
+
 
         for(int i = 0; i < tags.size(); i++){
 
@@ -193,6 +239,13 @@ public class PostingService {
             return false;
         }
         return true;
+    }
+
+    private String formatCreatedAt(LocalDateTime createdAt) {
+        ZoneId zoneId = ZoneId.systemDefault();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+
+        return createdAt.atZone(zoneId).format(formatter);
     }
 
 }
