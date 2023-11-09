@@ -2,7 +2,7 @@ name: ModernFarmer CI/CD
 
 on:
   push:
-    branches: ["master"]
+    branches: ["feature_3/-커뮤니티-게시글-관련-API"]
 
   pull_request:
     branches: ["dev"]
@@ -70,6 +70,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
+            
             docker stop ModernFarmerCommunity
             docker rm ModernFarmerCommunity
             docker rmi ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:1.0
