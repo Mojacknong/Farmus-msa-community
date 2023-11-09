@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
-import modernfarmer.server.farmuscommunity.community.entity.ReportTag;
-import modernfarmer.server.farmuscommunity.community.repository.ReportTagRepository;
 import modernfarmer.server.farmuscommunity.community.service.PostingService;
 import modernfarmer.server.farmuscommunity.community.util.JwtTokenProvider;
 import org.springframework.validation.annotation.Validated;
@@ -25,7 +23,7 @@ public class PostingController {
 
     private final JwtTokenProvider jwtTokenProvider;
     private  final PostingService postingService;
-    private final ReportTagRepository reportTagRepository;
+
 
     @PostMapping("/write")
     public BaseResponseDto writePosting(HttpServletRequest request, @RequestParam("file") List<MultipartFile> multipartFiles,
@@ -63,10 +61,13 @@ public class PostingController {
     }
 
 
-    @GetMapping("/report-tag")
-    public BaseResponseDto getReportTag() {
+    @GetMapping("/whole-posting")
+    public BaseResponseDto getWholePosting() {
 
-        return postingService.getReportTag();
+        return postingService.getWholePosting();
     }
+
+
+
 
 }

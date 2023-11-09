@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
-import modernfarmer.server.farmuscommunity.community.dto.response.ReportTagResponse;
 import modernfarmer.server.farmuscommunity.community.entity.*;
 import modernfarmer.server.farmuscommunity.community.repository.*;
 import modernfarmer.server.farmuscommunity.global.config.mail.MailSenderRunner;
@@ -26,7 +25,7 @@ import java.util.List;
 public class PostingService {
 
 
-    private final ReportTagRepository reportTagRepository;
+
     private final S3Uploader s3Uploader;
     private final PostingRepository postingRepository;
     private final PostingImageRepository postingImageRepository;
@@ -119,37 +118,46 @@ public class PostingService {
     public BaseResponseDto reportPosting(Long userId, ReportPostingRequest reportPostingRequest) throws Exception {
 
 
-        // 아이디로 이름 조회
-        String reportTagName = reportTagRepository.getReportTagName(reportPostingRequest.getReportTagId());
-
         // 테이블 데이터 넣기
         Posting posting = Posting.builder().id(reportPostingRequest.getPostingId()).build();
-        ReportTag reportTag = ReportTag.builder().id(reportPostingRequest.getReportTagId()).build();
+
 
         PostingReport postingReport = PostingReport
                 .builder()
                 .posting(posting)
-                .reportTag(reportTag)
+                .reportReason(reportPostingRequest.getReportReason())
                 .userId(userId)
                 .build();
 
         postingReportRepository.save(postingReport);
 
         // 메일 보내기
-        mailSenderRunner.sendEmail("신고 메일입니다. ", reportTagName +" 이유로 신고가 왔습니다.");
+        mailSenderRunner.sendEmail("신고 메일입니다. ", reportPostingRequest.getReportReason() +" 이유로 신고가 왔습니다.");
 
         // 완료
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
 
     }
 
-    public BaseResponseDto getReportTag(){
 
-        List<ReportTag> reportTag = reportTagRepository.findAllBy();
 
-        return BaseResponseDto.of(SuccessMessage.SUCCESS, ReportTagResponse.of(reportTag));
+    public BaseResponseDto getWholePosting(){
 
-    }
+        // 게시글 id, 제목, 내용, 업로드 시간,이미지 배열, 유저 id 게시글에 달린 댓글 개수 가져오기 함수(시간 순서로)
+
+        // 유저 id , 기반으로 유저 닉네임, 프로필 사진 url 가져오기 함수(페인)
+
+
+
+        // 시간 형식 업데이트 로직
+
+
+
+
+
+    return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
+
+}
 
     private void tagUpdate(Posting posting, List<String> tags){
 
