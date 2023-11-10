@@ -1,6 +1,7 @@
 package modernfarmer.server.farmuscommunity.community.controller;
 
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import modernfarmer.server.farmuscommunity.community.dto.request.DeleteCommentRequest;
 import modernfarmer.server.farmuscommunity.community.dto.request.UpdateCommentRequest;
@@ -51,6 +52,15 @@ public class CommentController {
 
         return baseResponseDto;
     }
+
+    @GetMapping("/posting-comments")
+    public BaseResponseDto postingComment(@RequestParam("posterId") Long posterId){
+
+        return commentService.postingComment(posterId);
+    }
+
+
+
 
 
 }

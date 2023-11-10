@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
-import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingDTO;
+import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingDto;
 
 import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingResponseDto;
 import modernfarmer.server.farmuscommunity.community.entity.*;
@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -168,7 +167,7 @@ public class PostingService {
             userDtoMap.put(userId, userDto);
         }
 
-        List<WholePostingDTO> wholePostingList = list.stream()
+        List<WholePostingDto> wholePostingList = list.stream()
                 .map(posting -> {
                     List<String> imageUrls = posting.getPostingImages().stream()
                             .map(PostingImage::getImageUrl)
@@ -184,7 +183,7 @@ public class PostingService {
                     Integer userId = Math.toIntExact(posting.getUserId());
                     Map<String, Object> userDto = userDtoMap.get(userId);
 
-                    WholePostingDTO.WholePostingDTOBuilder builder = WholePostingDTO.builder()
+                    WholePostingDto.WholePostingDtoBuilder builder = WholePostingDto.builder()
                             .userId(userId)
                             .title(posting.getTitle())
                             .contents(posting.getContents())
@@ -196,7 +195,7 @@ public class PostingService {
 
                     if (userDto != null) {
                         builder.nickName((String) userDto.get("nickName"))
-                                .imageUrl((String) userDto.get("imageUrl"));
+                                .userImageUrl((String) userDto.get("imageUrl"));
                     }
 
                     return builder.build();
@@ -218,7 +217,7 @@ public class PostingService {
 
         SpecificUserResponseDto user = new ObjectMapper().convertValue(userDataMap, SpecificUserResponseDto.class);
 
-        List<WholePostingDTO> specificUserWholePostingList = list.stream()
+        List<WholePostingDto> specificUserWholePostingList = list.stream()
                 .map(posting -> {
                     List<String> imageUrls = posting.getPostingImages().stream()
                             .map(PostingImage::getImageUrl)
@@ -231,7 +230,7 @@ public class PostingService {
                     // 시간 형식 업데이트 로직
                     String formattedDate = formatCreatedAt(posting.getCreatedAt());
 
-                    WholePostingDTO.WholePostingDTOBuilder builder = WholePostingDTO.builder()
+                    WholePostingDto.WholePostingDtoBuilder builder = WholePostingDto.builder()
                             .userId(Math.toIntExact(user.getId()))
                             .title(posting.getTitle())
                             .contents(posting.getContents())
@@ -239,7 +238,7 @@ public class PostingService {
                             .created_at(formattedDate)
                             .postingImage(imageUrls)
                             .tagName(tagNames)
-                            .imageUrl(user.getImageUrl())
+                            .userImageUrl(user.getImageUrl())
                             .nickName(user.getNickName())
                             .commentCount(posting.getComments().size());
 
@@ -291,7 +290,7 @@ public class PostingService {
         return true;
     }
 
-    private String formatCreatedAt(LocalDateTime createdAt) {
+    public String formatCreatedAt(LocalDateTime createdAt) {
         ZoneId zoneId = ZoneId.systemDefault();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
 

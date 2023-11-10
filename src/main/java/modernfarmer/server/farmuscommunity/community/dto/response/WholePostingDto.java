@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Builder
-public class WholePostingDTO {
+public class WholePostingDto {
 
         private Integer userId;
 
@@ -29,7 +29,7 @@ public class WholePostingDTO {
 
         private String nickName;
 
-        private String imageUrl;
+        private String userImageUrl;
 
 
 

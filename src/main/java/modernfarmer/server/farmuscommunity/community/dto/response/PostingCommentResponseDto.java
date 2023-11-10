@@ -5,14 +5,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.ArrayList;
 
 
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 @Getter
 @Builder
-public class WholePostingResponseDto {
+public class PostingCommentResponseDto {
 
-    List<WholePostingDto> wholePostingDTOList;
+    ArrayList<PostingCommentDto> postingCommentList;
 }
