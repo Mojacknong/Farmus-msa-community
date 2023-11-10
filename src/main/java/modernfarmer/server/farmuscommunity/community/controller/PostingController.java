@@ -62,6 +62,7 @@ public class PostingController {
     @GetMapping("/whole-posting")
     public BaseResponseDto getWholePosting() {
 
+        log.info("전체 게시글 조회 완료");
         return postingService.getWholePosting();
     }
 
@@ -70,6 +71,8 @@ public class PostingController {
 
         String userId = jwtTokenProvider.getUserId(request);
 
+
+        log.info("내 게시글 조회 완료");
         return postingService.getMyPosting(Long.valueOf(userId));
     }
 
