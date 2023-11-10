@@ -30,9 +30,7 @@ public class PostingController {
                                         @RequestParam("title") String title,
                                         @RequestParam("contents") String contents,
                                         @RequestParam("tags") List<String> tags
-    ) throws IOException {
-
-
+    ) {
         String userId = jwtTokenProvider.getUserId(request);
 
         return postingService.writePosting(Long.valueOf(userId), multipartFiles, title, contents, tags);
@@ -66,6 +64,17 @@ public class PostingController {
 
         return postingService.getWholePosting();
     }
+
+    @GetMapping("/my-posting")
+    public BaseResponseDto getMyPosting(HttpServletRequest request) {
+
+        String userId = jwtTokenProvider.getUserId(request);
+
+        return postingService.getMyPosting(Long.valueOf(userId));
+    }
+
+
+
 
 
 

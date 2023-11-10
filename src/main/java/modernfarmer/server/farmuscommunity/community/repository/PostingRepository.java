@@ -19,15 +19,8 @@ public interface PostingRepository extends JpaRepository<Posting, Long> {
     @Query("update Posting as p set p.title = :title, p.contents = :contents where p.userId = :userId and p.id = :postingId")
     void updatePosting(@Param("userId") Long userId, @Param("title") String title, @Param("contents") String contents, @Param("postingId") Long postingId);
 
-//    @Query("select p from Posting p " +
-//            "join fetch p.postingImages pi " +
-//            "join fetch p.postingTags pt " +
-//            "join fetch pt.tag t " +
-//            "join fetch p.comments c " +
-//            "group by p.id " +
-//            "order by p.createdAt desc")
-//    List<Posting> allPostingSelect();
 
+    List<Posting> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     @Query("select p from Posting p " +
             "order by p.createdAt desc")
