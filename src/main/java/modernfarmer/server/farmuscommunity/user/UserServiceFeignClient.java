@@ -4,13 +4,11 @@ package modernfarmer.server.farmuscommunity.user;
 import modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.HttpServletRequest;
 
 
-@FeignClient(name = "user-service")
+@FeignClient(name = "user-service", url = "http://3.38.2.59:8081")
 public interface UserServiceFeignClient {
 
 
