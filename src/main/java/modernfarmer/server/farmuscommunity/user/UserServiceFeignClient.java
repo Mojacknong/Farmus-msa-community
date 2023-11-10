@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.HttpServletRequest;
 
 
-@FeignClient("user-service")
+@FeignClient(name = "user-service", url = "http://3.38.2.59:8081")
 public interface UserServiceFeignClient {
 
 
@@ -21,8 +21,6 @@ public interface UserServiceFeignClient {
 
     @GetMapping(value = "/api/user/specific-user")
     BaseResponseDto specificUser(@RequestParam("userId") Long userId);
-
-
 
 
 
