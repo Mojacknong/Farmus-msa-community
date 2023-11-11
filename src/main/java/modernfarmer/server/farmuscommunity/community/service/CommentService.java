@@ -12,7 +12,7 @@ import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingDt
 import modernfarmer.server.farmuscommunity.community.entity.Comment;
 import modernfarmer.server.farmuscommunity.community.entity.Posting;
 import modernfarmer.server.farmuscommunity.community.entity.PostingImage;
-import modernfarmer.server.farmuscommunity.community.repository.*;
+import modernfarmer.server.farmuscommunity.community.repository.CommentRepository;
 import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import modernfarmer.server.farmuscommunity.user.UserServiceFeignClient;

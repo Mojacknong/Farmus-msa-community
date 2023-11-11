@@ -27,11 +27,12 @@ public class Posting extends BaseEntity{
     @Column(name = "contents", length = 501)
     private String contents;
 
-    @OneToMany(mappedBy = "posting")
-    private Set<PostingImage> postingImages = new LinkedHashSet<>();
+    @Column(name = "tag", nullable = false, length = 15)
+    private String tag;
+
 
     @OneToMany(mappedBy = "posting")
-    private Set<PostingTag> postingTags = new LinkedHashSet<>();
+    private Set<PostingImage> postingImages = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "posting")
     private Set<Comment> comments = new LinkedHashSet<>();
