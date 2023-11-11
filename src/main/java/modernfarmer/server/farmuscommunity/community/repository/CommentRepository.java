@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 
 @Repository
 public interface CommentRepository  extends JpaRepository<Comment, Long> {
@@ -23,5 +25,5 @@ public interface CommentRepository  extends JpaRepository<Comment, Long> {
     void deleteComment(@Param("userId") Long userId, @Param("posting") Posting posting, @Param("commentId") Long commentId);
 
 
-
+    List<Comment> findByPostingId(Long posterId);
 }

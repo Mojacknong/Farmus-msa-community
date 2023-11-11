@@ -25,16 +25,15 @@ public class PostingReport extends BaseEntity{
     private Long userId;
 
     @NotNull
+    @Column(name = "report_reason", nullable = false)
+    private String reportReason;
+
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "posting_id", nullable = false)
     private Posting posting;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "report_tag_id", nullable = false)
-    private ReportTag reportTag;
 
 
 

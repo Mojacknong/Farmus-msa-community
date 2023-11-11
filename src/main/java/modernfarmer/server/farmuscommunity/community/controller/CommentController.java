@@ -1,7 +1,9 @@
 package modernfarmer.server.farmuscommunity.community.controller;
 
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.DeleteCommentRequest;
 import modernfarmer.server.farmuscommunity.community.dto.request.UpdateCommentRequest;
 import modernfarmer.server.farmuscommunity.community.dto.request.WriteCommentRequest;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
+
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/community/comment")
@@ -51,6 +55,17 @@ public class CommentController {
 
         return baseResponseDto;
     }
+
+    @GetMapping("/posting-comments")
+    public BaseResponseDto postingComment(@RequestParam("posterId") Long posterId){
+
+        log.info("댓글 조회 완료");
+
+        return commentService.postingComment(posterId);
+    }
+
+
+
 
 
 }

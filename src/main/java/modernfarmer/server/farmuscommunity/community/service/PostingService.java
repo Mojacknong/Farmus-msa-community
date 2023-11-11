@@ -2,22 +2,32 @@ package modernfarmer.server.farmuscommunity.community.service;
 
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
-import modernfarmer.server.farmuscommunity.community.dto.response.ReportTagResponse;
+import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingDto;
+
+import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingResponseDto;
 import modernfarmer.server.farmuscommunity.community.entity.*;
 import modernfarmer.server.farmuscommunity.community.repository.*;
 import modernfarmer.server.farmuscommunity.global.config.mail.MailSenderRunner;
 import modernfarmer.server.farmuscommunity.global.config.s3.S3Uploader;
 import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
+import modernfarmer.server.farmuscommunity.user.UserServiceFeignClient;
+import modernfarmer.server.farmuscommunity.user.dto.SpecificUserResponseDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -26,7 +36,8 @@ import java.util.List;
 public class PostingService {
 
 
-    private final ReportTagRepository reportTagRepository;
+
+    private final UserServiceFeignClient userServiceFeignClient;
     private final S3Uploader s3Uploader;
     private final PostingRepository postingRepository;
     private final PostingImageRepository postingImageRepository;
@@ -69,7 +80,6 @@ public class PostingService {
 
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
-
 
     public BaseResponseDto updatePosting(
             Long userId,
@@ -119,39 +129,132 @@ public class PostingService {
     public BaseResponseDto reportPosting(Long userId, ReportPostingRequest reportPostingRequest) throws Exception {
 
 
-        // 아이디로 이름 조회
-        String reportTagName = reportTagRepository.getReportTagName(reportPostingRequest.getReportTagId());
-
         // 테이블 데이터 넣기
         Posting posting = Posting.builder().id(reportPostingRequest.getPostingId()).build();
-        ReportTag reportTag = ReportTag.builder().id(reportPostingRequest.getReportTagId()).build();
+
 
         PostingReport postingReport = PostingReport
                 .builder()
                 .posting(posting)
-                .reportTag(reportTag)
+                .reportReason(reportPostingRequest.getReportReason())
                 .userId(userId)
                 .build();
 
         postingReportRepository.save(postingReport);
 
         // 메일 보내기
-        mailSenderRunner.sendEmail("신고 메일입니다. ", reportTagName +" 이유로 신고가 왔습니다.");
+        mailSenderRunner.sendEmail("신고 메일입니다. ", reportPostingRequest.getReportReason() +" 이유로 신고가 왔습니다.");
 
         // 완료
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
 
     }
 
-    public BaseResponseDto getReportTag(){
 
-        List<ReportTag> reportTag = reportTagRepository.findAllBy();
 
-        return BaseResponseDto.of(SuccessMessage.SUCCESS, ReportTagResponse.of(reportTag));
+    public BaseResponseDto getWholePosting(){
 
+        List<Posting> list = postingRepository.allPostingSelect();
+
+        modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.allUser();
+        Map<String, Object> userDataMap = (Map<String, Object>) userData.getData();
+        List<Map<String, Object>> allUserDtoList = (List<Map<String, Object>>) userDataMap.get("allUserDtoList");
+
+
+        Map<Integer, Map<String, Object>> userDtoMap = new HashMap<>();
+        for (Map<String, Object> userDto : allUserDtoList) {
+            Integer userId = (Integer) userDto.get("id");
+            userDtoMap.put(userId, userDto);
+        }
+
+        List<WholePostingDto> wholePostingList = list.stream()
+                .map(posting -> {
+                    List<String> imageUrls = posting.getPostingImages().stream()
+                            .map(PostingImage::getImageUrl)
+                            .collect(Collectors.toList());
+
+                    List<String> tagNames = posting.getPostingTags().stream()
+                            .map(postingTag -> postingTag.getTag().getTagName())
+                            .collect(Collectors.toList());
+
+                    // 시간 형식 업데이트 로직
+                    String formattedDate = formatCreatedAt(posting.getCreatedAt());
+
+                    Integer userId = Math.toIntExact(posting.getUserId());
+                    Map<String, Object> userDto = userDtoMap.get(userId);
+
+                    WholePostingDto.WholePostingDtoBuilder builder = WholePostingDto.builder()
+                            .userId(userId)
+                            .title(posting.getTitle())
+                            .contents(posting.getContents())
+                            .postingId(posting.getId())
+                            .created_at(formattedDate)
+                            .postingImage(imageUrls)
+                            .tagName(tagNames)
+                            .commentCount(posting.getComments().size());
+
+                    if (userDto != null) {
+                        builder.nickName((String) userDto.get("nickName"))
+                                .userImageUrl((String) userDto.get("imageUrl"));
+                    }
+
+                    return builder.build();
+                })
+                .collect(Collectors.toList());
+
+    return BaseResponseDto.of(SuccessMessage.SUCCESS, WholePostingResponseDto.of(wholePostingList));
+}
+
+    public BaseResponseDto getMyPosting(Long userId){
+
+        List<Posting> list = postingRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+
+        modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.specificUser(userId);
+
+        LinkedHashMap<String, Object> userDataMap = (LinkedHashMap<String, Object>) userData.getData();
+
+
+        SpecificUserResponseDto user = new ObjectMapper().convertValue(userDataMap, SpecificUserResponseDto.class);
+
+        List<WholePostingDto> specificUserWholePostingList = list.stream()
+                .map(posting -> {
+                    List<String> imageUrls = posting.getPostingImages().stream()
+                            .map(PostingImage::getImageUrl)
+                            .collect(Collectors.toList());
+
+                    List<String> tagNames = posting.getPostingTags().stream()
+                            .map(postingTag -> postingTag.getTag().getTagName())
+                            .collect(Collectors.toList());
+
+                    // 시간 형식 업데이트 로직
+                    String formattedDate = formatCreatedAt(posting.getCreatedAt());
+
+                    WholePostingDto.WholePostingDtoBuilder builder = WholePostingDto.builder()
+                            .userId(Math.toIntExact(user.getId()))
+                            .title(posting.getTitle())
+                            .contents(posting.getContents())
+                            .postingId(posting.getId())
+                            .created_at(formattedDate)
+                            .postingImage(imageUrls)
+                            .tagName(tagNames)
+                            .userImageUrl(user.getImageUrl())
+                            .nickName(user.getNickName())
+                            .commentCount(posting.getComments().size());
+
+                    return builder.build();
+                })
+                .collect(Collectors.toList());
+
+        return BaseResponseDto.of(SuccessMessage.SUCCESS, WholePostingResponseDto.of(specificUserWholePostingList));
     }
 
+
+
+
+
     private void tagUpdate(Posting posting, List<String> tags){
+
 
         for(int i = 0; i < tags.size(); i++){
 
@@ -185,6 +288,13 @@ public class PostingService {
             return false;
         }
         return true;
+    }
+
+    public String formatCreatedAt(LocalDateTime createdAt) {
+        ZoneId zoneId = ZoneId.systemDefault();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+
+        return createdAt.atZone(zoneId).format(formatter);
     }
 
 }

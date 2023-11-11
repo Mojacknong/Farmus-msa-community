@@ -16,5 +16,5 @@ public class ReportPostingRequest {
     private Long postingId;
 
     @NotNull(message = "null 값을 가지면 안됩니다.")
-    private Long reportTagId;
+    private String reportReason;
 }
