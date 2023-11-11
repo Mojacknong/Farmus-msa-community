@@ -21,7 +21,7 @@ public class WholePostingDto {
 
         private Long postingId;
 
-        private List<String> tagName;
+        private String tag;
 
         private String created_at;
 

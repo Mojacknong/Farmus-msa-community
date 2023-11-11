@@ -29,11 +29,11 @@ public class PostingController {
     public BaseResponseDto writePosting(HttpServletRequest request, @RequestParam("file") List<MultipartFile> multipartFiles,
                                         @RequestParam("title") String title,
                                         @RequestParam("contents") String contents,
-                                        @RequestParam("tags") List<String> tags
+                                        @RequestParam("tag") String tag
     ) {
         String userId = jwtTokenProvider.getUserId(request);
 
-        return postingService.writePosting(Long.valueOf(userId), multipartFiles, title, contents, tags);
+        return postingService.writePosting(Long.valueOf(userId), multipartFiles, title, contents, tag);
     }
 
     @PostMapping("/report")
@@ -51,18 +51,17 @@ public class PostingController {
                                          @RequestParam("title") String title,
                                          @RequestParam("contents") String contents,
                                          @RequestParam("postingId") Long postingId,
-                                         @RequestParam("tags") List<String> tags) {
+                                         @RequestParam("tag") String tag) {
 
         String userId = jwtTokenProvider.getUserId(request);
 
-        return postingService.updatePosting(Long.valueOf(userId), removeFiles, updateFiles, title, contents, postingId, tags);
+        return postingService.updatePosting(Long.valueOf(userId), removeFiles, updateFiles, title, contents, postingId, tag);
     }
 
 
     @GetMapping("/whole-posting")
     public BaseResponseDto getWholePosting() {
 
-        log.info("전체 게시글 조회 완료");
         return postingService.getWholePosting();
     }
 
@@ -71,8 +70,6 @@ public class PostingController {
 
         String userId = jwtTokenProvider.getUserId(request);
 
-
-        log.info("내 게시글 조회 완료");
         return postingService.getMyPosting(Long.valueOf(userId));
     }
 

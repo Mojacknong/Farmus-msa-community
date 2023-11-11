@@ -41,8 +41,6 @@ public class PostingService {
     private final S3Uploader s3Uploader;
     private final PostingRepository postingRepository;
     private final PostingImageRepository postingImageRepository;
-    private final TagRepository tagRepository;
-    private final PostingTagRepository postingTagRepository;
     private final PostingReportRepository postingReportRepository;
     private final MailSenderRunner mailSenderRunner;
 
@@ -51,7 +49,7 @@ public class PostingService {
                                         List<MultipartFile> multipartFiles,
                                         String title,
                                         String contents,
-                                        List<String> tags) {
+                                        String tag) {
 
         boolean ojectUrlResult = true;
 
@@ -60,11 +58,10 @@ public class PostingService {
                 .title(title)
                 .contents(contents)
                 .userId(userId)
+                .tag(tag)
                 .build();
 
         postingRepository.save(posting);
-
-        tagUpdate(posting, tags);
 
         if(!multipartFiles.get(0).isEmpty()){
 
@@ -88,7 +85,7 @@ public class PostingService {
             String title,
             String contents,
             Long postingId,
-            List<String> tags) {
+            String tag) {
 
         boolean ojectUrlResult = true;
 
@@ -98,18 +95,16 @@ public class PostingService {
                 .title(title)
                 .contents(contents)
                 .userId(userId)
+                .tag(tag)
                 .build();
 
-        postingRepository.updatePosting(userId, title, contents, postingId);
+        postingRepository.updatePosting(userId, title, contents, postingId, tag);
 
         for(String image : removeFiles){
+
             postingImageRepository.deleteImage(image, posting);
-            log.info(image);
+
         }
-
-        postingTagRepository.deleteTag(posting);
-
-        tagUpdate(posting, tags);
 
         if(!updateFiles.get(0).isEmpty()){
 
@@ -173,10 +168,6 @@ public class PostingService {
                             .map(PostingImage::getImageUrl)
                             .collect(Collectors.toList());
 
-                    List<String> tagNames = posting.getPostingTags().stream()
-                            .map(postingTag -> postingTag.getTag().getTagName())
-                            .collect(Collectors.toList());
-
                     // 시간 형식 업데이트 로직
                     String formattedDate = formatCreatedAt(posting.getCreatedAt());
 
@@ -190,7 +181,7 @@ public class PostingService {
                             .postingId(posting.getId())
                             .created_at(formattedDate)
                             .postingImage(imageUrls)
-                            .tagName(tagNames)
+                            .tag(posting.getTag())
                             .commentCount(posting.getComments().size());
 
                     if (userDto != null) {
@@ -223,9 +214,6 @@ public class PostingService {
                             .map(PostingImage::getImageUrl)
                             .collect(Collectors.toList());
 
-                    List<String> tagNames = posting.getPostingTags().stream()
-                            .map(postingTag -> postingTag.getTag().getTagName())
-                            .collect(Collectors.toList());
 
                     // 시간 형식 업데이트 로직
                     String formattedDate = formatCreatedAt(posting.getCreatedAt());
@@ -237,7 +225,7 @@ public class PostingService {
                             .postingId(posting.getId())
                             .created_at(formattedDate)
                             .postingImage(imageUrls)
-                            .tagName(tagNames)
+                            .tag(posting.getTag())
                             .userImageUrl(user.getImageUrl())
                             .nickName(user.getNickName())
                             .commentCount(posting.getComments().size());
@@ -253,22 +241,6 @@ public class PostingService {
 
 
 
-    private void tagUpdate(Posting posting, List<String> tags){
-
-
-        for(int i = 0; i < tags.size(); i++){
-
-            Tag tag = tagRepository.findTagByAndTagName(tags.get(i));
-
-            PostingTag postingTag = PostingTag
-                    .builder()
-                    .tag(tag)
-                    .posting(posting)
-                    .build();
-
-            postingTagRepository.save(postingTag);
-        }
-    }
 
     private boolean objectImageUrl(Posting posting,List<MultipartFile> multipartFiles ){
 
