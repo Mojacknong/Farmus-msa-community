@@ -201,12 +201,12 @@ public class PostingService {
         List<Posting> list = postingRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
 
-        modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.specificUser(userId);
-
-        LinkedHashMap<String, Object> userDataMap = (LinkedHashMap<String, Object>) userData.getData();
-
-
-        SpecificUserResponseDto user = new ObjectMapper().convertValue(userDataMap, SpecificUserResponseDto.class);
+//        modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.specificUser(userId);
+//
+//        LinkedHashMap<String, Object> userDataMap = (LinkedHashMap<String, Object>) userData.getData();
+//
+//
+//        SpecificUserResponseDto user = new ObjectMapper().convertValue(userDataMap, SpecificUserResponseDto.class);
 
         List<WholePostingDto> specificUserWholePostingList = list.stream()
                 .map(posting -> {
@@ -219,15 +219,15 @@ public class PostingService {
                     String formattedDate = formatCreatedAt(posting.getCreatedAt());
 
                     WholePostingDto.WholePostingDtoBuilder builder = WholePostingDto.builder()
-                            .userId(Math.toIntExact(user.getId()))
+                       //     .userId(Math.toIntExact(user.getId()))
                             .title(posting.getTitle())
                             .contents(posting.getContents())
                             .postingId(posting.getId())
                             .created_at(formattedDate)
                             .postingImage(imageUrls)
                             .tag(posting.getTag())
-                            .userImageUrl(user.getImageUrl())
-                            .nickName(user.getNickName())
+                   //         .userImageUrl(user.getImageUrl())
+                    //        .nickName(user.getNickName())
                             .commentCount(posting.getComments().size());
 
                     return builder.build();
