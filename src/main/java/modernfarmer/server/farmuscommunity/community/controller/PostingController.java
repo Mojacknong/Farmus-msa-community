@@ -26,7 +26,8 @@ public class PostingController {
 
 
     @PostMapping("/write")
-    public BaseResponseDto writePosting(HttpServletRequest request, @RequestParam("file") List<MultipartFile> multipartFiles,
+    public BaseResponseDto writePosting(HttpServletRequest request,
+                                        @RequestPart("file") List<MultipartFile> multipartFiles,
                                         @RequestParam("title") String title,
                                         @RequestParam("contents") String contents,
                                         @RequestParam("tag") String tag
@@ -47,7 +48,7 @@ public class PostingController {
     @PatchMapping("/write-update")
     public BaseResponseDto updatePosting(HttpServletRequest request,
                                          @RequestParam("removeFile") List<String> removeFiles,
-                                         @RequestParam(value = "updateFile", required = false) List<MultipartFile> updateFiles,
+                                         @RequestPart(value = "updateFile", required = false) List<MultipartFile> updateFiles,
                                          @RequestParam("title") String title,
                                          @RequestParam("contents") String contents,
                                          @RequestParam("postingId") Long postingId,
