@@ -6,22 +6,19 @@ import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.DeleteCommentRequest;
 import modernfarmer.server.farmuscommunity.community.dto.request.UpdateCommentRequest;
 import modernfarmer.server.farmuscommunity.community.dto.request.WriteCommentRequest;
-import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
-import modernfarmer.server.farmuscommunity.community.dto.response.PostingCommentDto;
-import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingDto;
+import modernfarmer.server.farmuscommunity.community.dto.response.*;
 import modernfarmer.server.farmuscommunity.community.entity.Comment;
 import modernfarmer.server.farmuscommunity.community.entity.Posting;
 import modernfarmer.server.farmuscommunity.community.entity.PostingImage;
 import modernfarmer.server.farmuscommunity.community.repository.CommentRepository;
+import modernfarmer.server.farmuscommunity.community.repository.PostingRepository;
 import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import modernfarmer.server.farmuscommunity.user.UserServiceFeignClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -35,6 +32,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserServiceFeignClient userServiceFeignClient;
     private final PostingService postingService;
+    private final PostingRepository postingRepository;
 
     public BaseResponseDto writeComment(Long userId, WriteCommentRequest writeCommentRequest){
 
@@ -70,26 +68,46 @@ public class CommentService {
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
 
-    public BaseResponseDto postingComment(Long postingId){
+    public BaseResponseDto postingComment(Long postingId, Long userId){
 
 
         modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.allUser();
+        modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto speicificUserData = userServiceFeignClient.specificUser(userId);
+
         Map<String, Object> userDataMap = (Map<String, Object>) userData.getData();
+        LinkedHashMap<String, Object> speicificUserDataMap = (LinkedHashMap<String, Object>) speicificUserData.getData();
+
         List<Map<String, Object>> allUserDtoList = (List<Map<String, Object>>) userDataMap.get("allUserDtoList");
 
 
         Map<Integer, Map<String, Object>> userDtoMap = new HashMap<>();
         for (Map<String, Object> userDto : allUserDtoList) {
-            Integer userId = (Integer) userDto.get("id");
-            userDtoMap.put(userId, userDto);
+            Integer getUserId = (Integer) userDto.get("id");
+            userDtoMap.put(getUserId, userDto);
         }
-
 
         List<Comment> commentList = commentRepository.findByPostingId(postingId);
+        Optional<Posting> posting = postingRepository.findById(postingId);
 
-        if(commentList.isEmpty()){
-            return BaseResponseDto.of(ErrorMessage.NOT_EXIST_COMMENT);
+        if(posting.isEmpty()){
+            return BaseResponseDto.of(ErrorMessage.NOT_EXIST_POSTING);
         }
+
+        List<String> list =  posting.get().getPostingImages().stream().map(PostingImage::getImageUrl)
+                .collect(Collectors.toList());
+
+        WholePostingDto wholePostingDto = WholePostingDto
+                .builder()
+                .userId(Math.toIntExact(userId))
+                .nickName((String) speicificUserDataMap.get("nickName"))
+                .userImageUrl((String) speicificUserDataMap.get("userImageUrl"))
+                .postingId(postingId)
+                .tag(posting.get().getTag())
+                .title(posting.get().getTitle())
+                .contents(posting.get().getContents())
+                .postingImage(list)
+                .created_at(postingService.formatCreatedAt(posting.get().getCreatedAt()))
+                .build();
 
 
         List<PostingCommentDto> postingCommentList = commentList.stream()
@@ -98,11 +116,11 @@ public class CommentService {
                     // 시간 형식 업데이트 로직
                     String formattedDate = postingService.formatCreatedAt(comment.getCreatedAt());
 
-                    Integer userId = Math.toIntExact(comment.getUserId());
-                    Map<String, Object> userDto = userDtoMap.get(userId);
+                    Integer getUserId = Math.toIntExact(comment.getUserId());
+                    Map<String, Object> userDto = userDtoMap.get(getUserId);
 
                     PostingCommentDto.PostingCommentDtoBuilder builder = PostingCommentDto.builder()
-                            .userId(userId)
+                            .userId(getUserId)
                             .postingId(postingId)
                             .commentContents(comment.getCommentContents())
                             .commentCount(commentList.size())
@@ -117,7 +135,7 @@ public class CommentService {
                 })
                 .collect(Collectors.toList());
 
-        return BaseResponseDto.of(SuccessMessage.SUCCESS, postingCommentList);
+        return BaseResponseDto.of(SuccessMessage.SUCCESS, PostingCommentResponseDto.of(wholePostingDto, postingCommentList));
     }
 
 

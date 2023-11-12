@@ -31,10 +31,10 @@ public class Posting extends BaseEntity{
     private String tag;
 
 
-    @OneToMany(mappedBy = "posting")
+    @OneToMany(mappedBy = "posting", fetch = FetchType.LAZY)
     private Set<PostingImage> postingImages = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "posting")
+    @OneToMany(mappedBy = "posting", fetch = FetchType.LAZY)
     private Set<Comment> comments = new LinkedHashSet<>();
 
 }

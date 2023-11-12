@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PostingRepository extends JpaRepository<Posting, Long> {
@@ -21,6 +22,12 @@ public interface PostingRepository extends JpaRepository<Posting, Long> {
                        @Param("contents") String contents, @Param("postingId") Long postingId,
                        @Param("tag") String tag
     );
+
+    Optional<Posting> findById(Long postingId);
+
+    @Query("select p  from Posting p join p.postingImages pi where p.id = :postingId")
+    Optional<Posting> getPostingData(@Param("postingId") Long postingId);
+
 
 
     List<Posting> findByUserIdOrderByCreatedAtDesc(Long userId);

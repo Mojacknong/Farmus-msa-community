@@ -5,7 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+
+import java.util.List;
 
 
 @NoArgsConstructor
@@ -14,5 +15,7 @@ import java.util.ArrayList;
 @Builder
 public class PostingCommentResponseDto {
 
-    ArrayList<PostingCommentDto> postingCommentList;
+    WholePostingDto wholePostingDto;
+
+    List<PostingCommentDto> postingCommentList;
 }
