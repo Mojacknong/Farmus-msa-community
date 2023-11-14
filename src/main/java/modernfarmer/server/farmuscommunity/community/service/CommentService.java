@@ -100,7 +100,7 @@ public class CommentService {
                 .builder()
                 .userId(Math.toIntExact(userId))
                 .nickName((String) speicificUserDataMap.get("nickName"))
-                .userImageUrl((String) speicificUserDataMap.get("userImageUrl"))
+                .userImageUrl((String) speicificUserDataMap.get("imageUrl"))
                 .postingId(postingId)
                 .tag(posting.get().getTag())
                 .title(posting.get().getTitle())
