@@ -4,9 +4,17 @@ package modernfarmer.server.farmuscommunity.global.config.s3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import modernfarmer.server.farmuscommunity.community.entity.Posting;
+import modernfarmer.server.farmuscommunity.community.entity.PostingImage;
+import modernfarmer.server.farmuscommunity.community.repository.PostingImageRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -17,17 +25,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
+
+@RequiredArgsConstructor
 @Slf4j
-@Component
+@Service
 public class S3Uploader {
+
     private final AmazonS3Client amazonS3Client;
+
+    private final PostingImageRepository postingImageRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public S3Uploader(AmazonS3Client amazonS3Client) {
-        this.amazonS3Client = amazonS3Client;
-    }
+
 
     public String uploadFile(
             MultipartFile multipartFile, String dirName) throws IOException {
@@ -79,5 +91,26 @@ public class S3Uploader {
             return Optional.of(convertFile);
         }
         return Optional.empty();
+    }
+
+
+    public boolean objectImageUrl(Posting posting, List<MultipartFile> multipartFiles ){
+
+        try{
+
+            List<String> imageUrls = uploadFiles(multipartFiles, "postingImages");
+
+            for(String url : imageUrls){
+                PostingImage postingImage = PostingImage
+                        .builder()
+                        .posting(posting)
+                        .imageUrl(url)
+                        .build();
+                postingImageRepository.save(postingImage);
+            }
+        }catch (IOException e){
+            return false;
+        }
+        return true;
     }
 }

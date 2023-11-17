@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 
 
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Builder
 @Entity
