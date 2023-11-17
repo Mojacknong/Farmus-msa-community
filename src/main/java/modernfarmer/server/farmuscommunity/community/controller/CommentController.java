@@ -57,11 +57,12 @@ public class CommentController {
     }
 
     @GetMapping("/posting-comments")
-    public BaseResponseDto postingComment(@RequestParam("posterId") Long posterId){
+    public BaseResponseDto postingComment(@RequestParam("posterId") Long posterId,
+                                          @RequestParam("userId") Long userId
+                                          ){
 
-        log.info("댓글 조회 완료");
 
-        return commentService.postingComment(posterId);
+        return commentService.postingComment(posterId, userId);
     }
 
 
