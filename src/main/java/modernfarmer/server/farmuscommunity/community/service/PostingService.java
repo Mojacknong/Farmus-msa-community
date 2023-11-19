@@ -185,6 +185,7 @@ public class PostingService {
                             .tag(posting.getTag())
                             .commentCount(posting.getComments().size());
 
+
                     if (userDto != null) {
                         builder.nickName((String) userDto.get("nickName"))
                                 .userImageUrl((String) userDto.get("imageUrl"));
@@ -214,6 +215,7 @@ public class PostingService {
                     String formattedDate = timeCalculator.formatCreatedAt(posting.getCreatedAt());
 
                     WholePostingDto.WholePostingDtoBuilder builder = WholePostingDto.builder()
+                            .userId(Math.toIntExact(userId))
                             .title(posting.getTitle())
                             .contents(posting.getContents())
                             .postingId(posting.getId())
