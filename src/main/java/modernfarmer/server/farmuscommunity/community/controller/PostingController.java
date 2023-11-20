@@ -75,11 +75,11 @@ public class PostingController {
     }
 
 
-    @DeleteMapping("/all-posting")
-    public BaseResponseDto<Void> deleteAllPosting(Long userId) {
+    @DeleteMapping("/all-posting/{userId}")
+    public void deleteAllPosting(@PathVariable("userId") Long userId) {
+        postingService.deleteAllPosting(userId);
 
-
-        return postingService.deleteAllPosting(userId);
+      //  return
     }
 
 
