@@ -12,6 +12,7 @@ import modernfarmer.server.farmuscommunity.community.entity.Posting;
 import modernfarmer.server.farmuscommunity.community.entity.PostingImage;
 import modernfarmer.server.farmuscommunity.community.repository.CommentRepository;
 import modernfarmer.server.farmuscommunity.community.repository.PostingRepository;
+import modernfarmer.server.farmuscommunity.community.util.TimeCalculator;
 import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import modernfarmer.server.farmuscommunity.user.UserServiceFeignClient;
@@ -30,11 +31,16 @@ public class CommentService {
 
 
     private final CommentRepository commentRepository;
+
     private final UserServiceFeignClient userServiceFeignClient;
-    private final PostingService postingService;
+
+    private final TimeCalculator timeCalculator;
+
+
+
     private final PostingRepository postingRepository;
 
-    public BaseResponseDto writeComment(Long userId, WriteCommentRequest writeCommentRequest){
+    public BaseResponseDto<Void> writeComment(Long userId, WriteCommentRequest writeCommentRequest){
 
         Posting posting = Posting.builder().id(writeCommentRequest.getPostingId()).build();
 
@@ -47,28 +53,34 @@ public class CommentService {
 
         commentRepository.save(comment);
 
+        log.info("댓글 쓰기 완료");
+
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
 
-    public BaseResponseDto updateComment(Long userId, UpdateCommentRequest updateCommentRequest){
+    public BaseResponseDto<Void> updateComment(Long userId, UpdateCommentRequest updateCommentRequest){
 
         Posting posting = Posting.builder().id(updateCommentRequest.getPostingId()).build();
 
         commentRepository.updateComment(userId, posting,updateCommentRequest.getCommentId(),updateCommentRequest.getComment());
 
+        log.info("댓글 수정 완료");
+
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
 
-    public BaseResponseDto deleteComment(Long userId, DeleteCommentRequest deleteCommentRequest){
+    public BaseResponseDto<Void> deleteComment(Long userId, DeleteCommentRequest deleteCommentRequest){
 
         Posting posting = Posting.builder().id(deleteCommentRequest.getPostingId()).build();
 
         commentRepository.deleteComment(userId, posting,deleteCommentRequest.getCommentId());
 
+        log.info("댓글 삭제 완료");
+
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
 
-    public BaseResponseDto postingComment(Long postingId, Long userId){
+    public BaseResponseDto<PostingCommentResponseDto> postingComment(Long postingId, Long userId){
 
 
         modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.allUser();
@@ -106,7 +118,7 @@ public class CommentService {
                 .title(posting.get().getTitle())
                 .contents(posting.get().getContents())
                 .postingImage(list)
-                .created_at(postingService.formatCreatedAt(posting.get().getCreatedAt()))
+                .created_at(timeCalculator.formatCreatedAt(posting.get().getCreatedAt()))
                 .build();
 
 
@@ -114,7 +126,7 @@ public class CommentService {
                 .map(comment -> {
 
                     // 시간 형식 업데이트 로직
-                    String formattedDate = postingService.formatCreatedAt(comment.getCreatedAt());
+                    String formattedDate = timeCalculator.formatCreatedAt(comment.getCreatedAt());
 
                     Integer getUserId = Math.toIntExact(comment.getUserId());
                     Map<String, Object> userDto = userDtoMap.get(getUserId);
@@ -134,6 +146,8 @@ public class CommentService {
                     return builder.build();
                 })
                 .collect(Collectors.toList());
+
+        log.info("게시글에 대한 정보와 게시물에 대한 댓글 조회 완료");
 
         return BaseResponseDto.of(SuccessMessage.SUCCESS, PostingCommentResponseDto.of(wholePostingDto, postingCommentList));
     }

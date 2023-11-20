@@ -2,30 +2,27 @@ package modernfarmer.server.farmuscommunity.community.service;
 
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import modernfarmer.server.farmuscommunity.community.dto.request.ReportPostingRequest;
 import modernfarmer.server.farmuscommunity.community.dto.response.BaseResponseDto;
 import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingDto;
-
 import modernfarmer.server.farmuscommunity.community.dto.response.WholePostingResponseDto;
 import modernfarmer.server.farmuscommunity.community.entity.*;
 import modernfarmer.server.farmuscommunity.community.repository.*;
+import modernfarmer.server.farmuscommunity.community.util.TimeCalculator;
 import modernfarmer.server.farmuscommunity.global.config.mail.MailSenderRunner;
 import modernfarmer.server.farmuscommunity.global.config.s3.S3Uploader;
 import modernfarmer.server.farmuscommunity.global.exception.fail.ErrorMessage;
 import modernfarmer.server.farmuscommunity.global.exception.success.SuccessMessage;
 import modernfarmer.server.farmuscommunity.user.UserServiceFeignClient;
-import modernfarmer.server.farmuscommunity.user.dto.SpecificUserResponseDto;
+import modernfarmer.server.farmuscommunity.user.dto.AllUserResponseDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,9 +40,10 @@ public class PostingService {
     private final PostingImageRepository postingImageRepository;
     private final PostingReportRepository postingReportRepository;
     private final MailSenderRunner mailSenderRunner;
+    private final TimeCalculator timeCalculator;
 
 
-    public BaseResponseDto writePosting(Long userId,
+    public BaseResponseDto<Void> writePosting(Long userId,
                                         List<MultipartFile> multipartFiles,
                                         String title,
                                         String contents,
@@ -65,7 +63,7 @@ public class PostingService {
 
         if(!multipartFiles.get(0).isEmpty()){
 
-            ojectUrlResult = objectImageUrl(posting, multipartFiles);
+            ojectUrlResult = s3Uploader.objectImageUrl(posting, multipartFiles);
 
         }
 
@@ -75,10 +73,12 @@ public class PostingService {
 
         }
 
+        log.info("게시글 작성 완료");
+
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
     }
 
-    public BaseResponseDto updatePosting(
+    public BaseResponseDto<Void> updatePosting(
             Long userId,
             List<String> removeFiles,
             List<MultipartFile> updateFiles,
@@ -108,7 +108,7 @@ public class PostingService {
 
         if(!updateFiles.get(0).isEmpty()){
 
-            ojectUrlResult = objectImageUrl(posting, updateFiles);
+            ojectUrlResult = s3Uploader.objectImageUrl(posting, updateFiles);
         }
 
         if(!ojectUrlResult){
@@ -121,7 +121,7 @@ public class PostingService {
 
     }
 
-    public BaseResponseDto reportPosting(Long userId, ReportPostingRequest reportPostingRequest) throws Exception {
+    public BaseResponseDto<Void> reportPosting(Long userId, ReportPostingRequest reportPostingRequest) throws Exception {
 
 
         // 테이블 데이터 넣기
@@ -140,14 +140,15 @@ public class PostingService {
         // 메일 보내기
         mailSenderRunner.sendEmail("신고 메일입니다. ", reportPostingRequest.getReportReason() +" 이유로 신고가 왔습니다.");
 
-        // 완료
+        log.info("신고 완료");
+
         return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
 
     }
 
 
 
-    public BaseResponseDto getWholePosting(){
+    public BaseResponseDto<WholePostingResponseDto> getWholePosting(){
 
         List<Posting> list = postingRepository.allPostingSelect();
 
@@ -169,7 +170,7 @@ public class PostingService {
                             .collect(Collectors.toList());
 
                     // 시간 형식 업데이트 로직
-                    String formattedDate = formatCreatedAt(posting.getCreatedAt());
+                    String formattedDate = timeCalculator.formatCreatedAt(posting.getCreatedAt());
 
                     Integer userId = Math.toIntExact(posting.getUserId());
                     Map<String, Object> userDto = userDtoMap.get(userId);
@@ -184,6 +185,7 @@ public class PostingService {
                             .tag(posting.getTag())
                             .commentCount(posting.getComments().size());
 
+
                     if (userDto != null) {
                         builder.nickName((String) userDto.get("nickName"))
                                 .userImageUrl((String) userDto.get("imageUrl"));
@@ -193,20 +195,14 @@ public class PostingService {
                 })
                 .collect(Collectors.toList());
 
+    log.info("전체 게시글 조회 완료");
+
     return BaseResponseDto.of(SuccessMessage.SUCCESS, WholePostingResponseDto.of(wholePostingList));
 }
 
-    public BaseResponseDto getMyPosting(Long userId){
+    public BaseResponseDto<WholePostingResponseDto> getMyPosting(Long userId){
 
         List<Posting> list = postingRepository.findByUserIdOrderByCreatedAtDesc(userId);
-
-
-//        modernfarmer.server.farmuscommunity.user.dto.BaseResponseDto userData = userServiceFeignClient.specificUser(userId);
-//
-//        LinkedHashMap<String, Object> userDataMap = (LinkedHashMap<String, Object>) userData.getData();
-//
-//
-//        SpecificUserResponseDto user = new ObjectMapper().convertValue(userDataMap, SpecificUserResponseDto.class);
 
         List<WholePostingDto> specificUserWholePostingList = list.stream()
                 .map(posting -> {
@@ -216,57 +212,24 @@ public class PostingService {
 
 
                     // 시간 형식 업데이트 로직
-                    String formattedDate = formatCreatedAt(posting.getCreatedAt());
+                    String formattedDate = timeCalculator.formatCreatedAt(posting.getCreatedAt());
 
                     WholePostingDto.WholePostingDtoBuilder builder = WholePostingDto.builder()
-                       //     .userId(Math.toIntExact(user.getId()))
+                            .userId(Math.toIntExact(userId))
                             .title(posting.getTitle())
                             .contents(posting.getContents())
                             .postingId(posting.getId())
                             .created_at(formattedDate)
                             .postingImage(imageUrls)
                             .tag(posting.getTag())
-                   //         .userImageUrl(user.getImageUrl())
-                    //        .nickName(user.getNickName())
                             .commentCount(posting.getComments().size());
 
                     return builder.build();
                 })
                 .collect(Collectors.toList());
+        log.info("나의 게시글 조회 완료");
 
         return BaseResponseDto.of(SuccessMessage.SUCCESS, WholePostingResponseDto.of(specificUserWholePostingList));
-    }
-
-
-
-
-
-
-    private boolean objectImageUrl(Posting posting,List<MultipartFile> multipartFiles ){
-
-        try{
-
-            List<String> imageUrls = s3Uploader.uploadFiles(multipartFiles, "postingImages");
-
-            for(String url : imageUrls){
-                PostingImage postingImage = PostingImage
-                        .builder()
-                        .posting(posting)
-                        .imageUrl(url)
-                        .build();
-                postingImageRepository.save(postingImage);
-            }
-        }catch ( IOException e){
-            return false;
-        }
-        return true;
-    }
-
-    public String formatCreatedAt(LocalDateTime createdAt) {
-        ZoneId zoneId = ZoneId.systemDefault();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
-
-        return createdAt.atZone(zoneId).format(formatter);
     }
 
 }
