@@ -232,4 +232,14 @@ public class PostingService {
         return BaseResponseDto.of(SuccessMessage.SUCCESS, WholePostingResponseDto.of(specificUserWholePostingList));
     }
 
+
+    public BaseResponseDto<Void> deleteAllPosting(Long userId){
+
+        postingRepository.deleteAllPosting(userId);
+
+        log.info("해당 계정의 모든 게시글 삭제");
+
+        return BaseResponseDto.of(SuccessMessage.SUCCESS, null);
+    }
+
 }
