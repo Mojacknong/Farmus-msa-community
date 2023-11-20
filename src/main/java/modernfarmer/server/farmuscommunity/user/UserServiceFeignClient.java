@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 
-@FeignClient(name = "user-service", url = "http://3.38.2.59:8081")
+@FeignClient(name = "user-service")
 public interface UserServiceFeignClient {
 
 
