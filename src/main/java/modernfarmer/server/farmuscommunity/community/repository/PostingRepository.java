@@ -23,6 +23,11 @@ public interface PostingRepository extends JpaRepository<Posting, Long> {
                        @Param("tag") String tag
     );
 
+
+    @Modifying
+    @Query("delete from Posting as p where p.userId = :userId")
+    void deleteAllPosting(@Param("userId") Long userId);
+
     Optional<Posting> findById(Long postingId);
 
     @Query("select p  from Posting p join p.postingImages pi where p.id = :postingId")

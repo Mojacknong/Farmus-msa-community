@@ -2,7 +2,7 @@ name: ModernFarmer CI/CD
 
 on:
   push:
-    branches: ["feature_13/코드-리팩토링"]
+    branches: ["feature_15/커뮤니티-삭제-api"]
 
 
   pull_request:

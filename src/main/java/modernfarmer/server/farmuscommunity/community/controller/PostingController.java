@@ -74,4 +74,18 @@ public class PostingController {
         return postingService.getMyPosting(Long.valueOf(userId));
     }
 
+
+    @DeleteMapping("/all-posting/{userId}")
+    public void deleteAllPosting(@PathVariable("userId") Long userId) {
+        postingService.deleteAllPosting(userId);
+
+      //  return
+    }
+
+
+
+
+
+
+
 }

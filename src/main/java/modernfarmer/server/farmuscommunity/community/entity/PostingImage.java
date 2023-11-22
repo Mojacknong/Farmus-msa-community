@@ -21,8 +21,7 @@ public class PostingImage extends BaseEntity{
     @Column(name = "image_url", nullable = false, length = 500)
     private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "posting_id", nullable = false)
     private Posting posting;
 
